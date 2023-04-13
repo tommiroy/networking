@@ -49,7 +49,7 @@ async fn run_server() {
         .await;
 }
 
-async fn run_client(server_ip: &str) -> Result<(), reqwest::Error> {
+async fn run_client(ip: &str) -> Result<(), reqwest::Error> {
     let server_ca_file_loc = "ca/ca.crt";
     let mut buf = Vec::new();
     File::open(server_ca_file_loc)
@@ -95,7 +95,7 @@ async fn run_client(server_ip: &str) -> Result<(), reqwest::Error> {
         text: "To route2".to_string(),
     };
 
-    let server_ip = "https://".to_owned() + server_ip;
+    let server_ip = "https://".to_owned() + ip;
 
     let ras = send_message(&server_ip, &client, "route2", request2.clone()).await;
     let res = send_message(&server_ip, &client, "message", request).await;
