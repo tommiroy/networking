@@ -45,11 +45,11 @@ async fn run_server() {
         .key_path("server/localhost.key")
         .cert_path("server/localhost.bundle.crt")
         .client_auth_required_path("ca/ca.crt")
-        .run(([0, 0, 0, 0], 3030))
+        .run(([172, 18, 0, 6], 3030))
         .await;
 }
 
-async fn run_client(ip: &str) -> Result<(), reqwest::Error> {
+async fn run_client() -> Result<(), reqwest::Error> {
     let server_ca_file_loc = "ca/ca.crt";
     let mut buf = Vec::new();
     File::open(server_ca_file_loc)
@@ -95,7 +95,7 @@ async fn run_client(ip: &str) -> Result<(), reqwest::Error> {
         text: "To route2".to_string(),
     };
 
-    let server_ip = "https://".to_owned() + ip + "/";
+    let server_ip = "https://server:3030/";
 
     let ras = send_message(&server_ip, &client, "route2", request2.clone()).await;
     let res = send_message(&server_ip, &client, "message", request).await;
@@ -113,8 +113,7 @@ async fn main() {
         let server = run_server();
         server.await;
     } else if args[1] == "client" {
-        let server_ip = &args[2];
-        let client = run_client(server_ip);
+        let client = run_client();
         client.await.unwrap();
     };
 }
