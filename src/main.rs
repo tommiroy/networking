@@ -43,7 +43,7 @@ struct ServerOption {
 mod server;
 mod mainbak;
 mod client;
-
+mod helper;
 
 
 use client::{run_client};
@@ -64,7 +64,11 @@ async fn main() {
         // Start as a server
         Mode::Server (ServerOption { cert, key, ca, port}) => {
             let (tx, mut rx) = unbounded_channel::<String>();
-            let mut my_server = Server::new(cert.to_string(), key.to_string(), ca.to_string(), port.to_string());
+            let mut my_server = Server::new(
+                                            cert.to_string(), 
+                                            key.to_string(), 
+                                            ca.to_string(), 
+                                            port.to_string());
             my_server.add_client("test".to_owned());
 
             tokio::spawn(async move {
