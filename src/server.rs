@@ -71,17 +71,25 @@ pub async fn send_message(
 }
 
 // ########################################################################################
-
+#[derive(Clone)]
 pub struct Server {
     cert:   String,
     key:    String,
     ca:     String,
     port:   String,
+    clients: Vec<String>,
 }
 
 impl Server {
-    pub fn new() {
-        println!("This is a new server");
+
+    pub fn new(cert: String, key: String, ca: String, port: String) -> Server{
+        Self {cert, key, ca, port, clients: Vec::<String>::new()}
     }
+
+    pub fn add_client(&mut self, addr: String) {
+        self.clients.push(addr);
+    }
+
+
 
 } 

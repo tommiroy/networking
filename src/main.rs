@@ -33,6 +33,11 @@ struct ServerOption {
     /// Certificate Authority path
     #[arg(long)]
     ca: String,
+
+    /// Server port
+    #[arg(long)]
+    port: String,
+
 }
 
 mod server;
@@ -42,7 +47,7 @@ mod client;
 
 
 use client::{run_client};
-use server::{run_server};
+use server::{Server, run_server};
 
 
 use tokio::sync::mpsc::{Sender, unbounded_channel};
@@ -56,8 +61,11 @@ async fn main() {
     let args = App::parse();
 
     match &args.mode {
-        Mode::Server (option) => {
+        // Start as a server
+        Mode::Server (ServerOption { cert, key, ca, port}) => {
             let (tx, mut rx) = unbounded_channel::<String>();
+            let mut my_server = Server::new(cert.to_string(), key.to_string(), ca.to_string(), port.to_string());
+            my_server.add_client("test".to_owned());
 
             tokio::spawn(async move {
                 run_server(tx).await;
@@ -68,9 +76,11 @@ async fn main() {
 
             }
         }
+
+        // Start as a client
         Mode::Client (option) => {
             let _ = run_client("localhost:3030".to_string()).await;
-            println!("Arguments for Client: {option:?}");
+            // println!("Arguments for Client: {option:?}");
         }
     }
 
