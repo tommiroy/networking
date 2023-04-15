@@ -1,134 +1,79 @@
-use serde::{Deserialize, Serialize};
-use std::{clone, env};
-
-use tokio::fs::File;
-use tokio::io::AsyncReadExt;
-use warp::*;
-
-#[derive(Serialize, Deserialize)]
-struct Request {
-    message: String,
+/// ###################################################################
+/// Argument options
+/// Dont care about these
+/// ###################################################################
+use clap::{Parser, Subcommand, Args};
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct App {
+    /// Name of the person to greet
+    #[command(subcommand)]
+    mode: Mode,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Idmsg {
-    identity: u32,
-    text: String,
+#[derive(Subcommand)]
+enum Mode {
+    /// Server mode
+    Server (ServerOption),
+    /// Client mode
+    Client (ServerOption),
 }
 
-async fn run_server() {
-    // specific message
+#[derive(Args, Debug)]
+struct ServerOption {
 
-    // Get /
+    /// Certificates path
+    #[arg(long)]
+    cert: String,
 
-    let route1 = warp::post()
-        .and(warp::path("message"))
-        .and(warp::body::json())
-        .map(|request: Idmsg| {
-            println!(
-                "Received message from {}: {}",
-                request.identity, request.text
-            );
-            warp::reply::json(&request)
-        });
+    /// Private key path
+    #[arg(long)]
+    key:String,
 
-    let route2 = warp::post()
-        .and(warp::path("route2"))
-        .and(warp::body::json())
-        .map(|request: serde_json::Value| {
-            println!("Received message: {:?}", request);
-            warp::reply::json(&request)
-        });
-
-    warp::serve(route1.or(route2))
-        .tls()
-        .key_path("server/localhost.key")
-        .cert_path("server/localhost.bundle.crt")
-        .client_auth_required_path("ca/ca.crt")
-        .run(([0, 0, 0, 0], 3030))
-        .await;
+    /// Certificate Authority path
+    #[arg(long)]
+    ca: String,
 }
 
-async fn run_client(ip: &str) -> Result<(), reqwest::Error> {
-    let server_ca_file_loc = "ca/ca.crt";
-    let mut buf = Vec::new();
-    File::open(server_ca_file_loc)
-        .await
-        .unwrap()
-        .read_to_end(&mut buf)
-        .await
-        .unwrap();
-    let cert = reqwest::Certificate::from_pem(&buf)?;
+mod server;
+mod mainbak;
+mod client;
 
-    #[cfg(feature = "rustls-tls")]
-    async fn get_identity() -> reqwest::Identity {
-        let client_pem_file_loc = "client/client_0.pem";
-        let mut buf = Vec::new();
-        File::open(client_pem_file_loc)
-            .await
-            .unwrap()
-            .read_to_end(&mut buf)
-            .await
-            .unwrap();
-        reqwest::Identity::from_pem(&buf).unwrap()
-    }
 
-    let identity = get_identity().await;
 
-    #[cfg(feature = "rustls-tls")]
-    let client = reqwest::Client::builder().use_rustls_tls();
+use client::{run_client};
+use server::{run_server};
 
-    let client = client
-        .tls_built_in_root_certs(false)
-        .add_root_certificate(cert)
-        .identity(identity)
-        .https_only(true)
-        .build()?;
 
-    let request = Idmsg {
-        identity: 51,
-        text: "Hello, world!".to_string(),
-    };
+use tokio::sync::mpsc::{Sender, unbounded_channel};
 
-    let request2 = Idmsg {
-        identity: 52,
-        text: "To route2".to_string(),
-    };
-
-    let server_ip = "https://".to_owned() + ip + "/";
-
-    let ras = send_message(&server_ip, &client, "route2", request2.clone()).await;
-    let res = send_message(&server_ip, &client, "message", request).await;
-    println!("Received:");
-    println!("Server responded with message: {:?}", res);
-    println!("Received:");
-    println!("Server responded with message: {:?}", ras);
-    Ok(())
-}
+/// ###################################################################
+/// Main Function
+/// ###################################################################
 
 #[tokio::main]
 async fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args[1] == "server" {
-        let server = run_server();
-        server.await;
-    } else if args[1] == "client" {
-        let server_ip = &args[2];
-        let client = run_client(server_ip);
-        client.await.unwrap();
-    };
+    let args = App::parse();
+
+    match &args.mode {
+        Mode::Server (option) => {
+            let (tx, mut rx) = unbounded_channel::<String>();
+
+            tokio::spawn(async move {
+                run_server(tx).await;
+            });
+
+            while let Some(msg) = rx.recv().await {
+                println!("Got a message: {msg}");
+
+            }
+        }
+        Mode::Client (option) => {
+            let _ = run_client("localhost:3030".to_string()).await;
+            println!("Arguments for Client: {option:?}");
+        }
+    }
+
 }
 
-pub async fn send_message(
-    server_ip: &str,
-    client: &reqwest::Client,
-    channel: &str,
-    request: Idmsg,
-) -> reqwest::Response {
-    client
-        .post(server_ip.to_owned() + channel)
-        .body(serde_json::to_string(&request).unwrap())
-        .send()
-        .await
-        .unwrap()
-}
+// ###################################################################
