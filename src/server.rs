@@ -102,20 +102,25 @@ impl Server {
 
 async fn _serve(tx: UnboundedSender<String>) {
     let warp_tx = warp::any().map(move || tx.clone());
-
-    let route1 = warp::post()
-    .and(warp::path("message"))
+    
+    // Create routes for different algorithms 
+    // Key generation route
+    let keygen = warp::post()
+    .and(warp::path("keygen"))
     .and(warp::body::json())
     .and(warp_tx.clone())
-    .map(|request: Idmsg, warp_tx: UnboundedSender<String>| {
-        println!(
-            "Received message from {}: {}",
-            request.identity, request.text
-        );
-        if let Err(e) = warp_tx.send(request.clone().text) {
+    .map(|msg: String, warp_tx: UnboundedSender<String>| {
+        // println!(
+        //     "Received message from {}: {}",
+        //     request.identity, request.text
+        // );
+        
+//  I DONT KNOW HOW TO SERIALIZE OR DESERIALIZE SHIT FROM HERE
+
+        if let Err(e) = warp_tx.send(msg) {
             panic!("Cant relay message back to main thread!. Error: {e}");
         }
-        warp::reply::json(&request)
+        // warp::reply::json(&request)
     });
     
     let route2 = warp::post()
