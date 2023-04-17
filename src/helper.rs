@@ -45,11 +45,16 @@ pub struct Message {
     sender:     String,
     receiver:   String,
     // 
-    msg_type:       MsgType,
+    msg_type:   MsgType,
+    msg:        String
 
 }
+
+// Different types of message sent over the network
 #[derive(Clone, Serialize, Deserialize)]
 pub enum MsgType {
-    KEYGEN,
-    CO
+    Keygen,
+    Nonce,
+    Sign,
+    Update,
 }

@@ -6,9 +6,6 @@ use tokio::io::AsyncReadExt;
 use warp::*;
 
 
-// use crate::helper::{get_identity};
-
-// use crate::helper;
 use super::helper::{get_identity, reqwest_read_cert};
 
 #[derive(Serialize, Deserialize)]
@@ -77,19 +74,6 @@ pub async fn run_client(ip: String) -> Result<(), reqwest::Error> {
     println!("Server responded with message: {:?}", ras);
     Ok(())
 }
-
-// #[tokio::main]
-// async fn main() {
-//     let args: Vec<String> = env::args().collect();
-//     if args[1] == "server" {
-//         let server = run_server();
-//         server.await;
-//     } else if args[1] == "client" {
-//         let server_ip = &args[2];
-//         let client = run_client(server_ip);
-//         client.await.unwrap();
-//     };
-// }
 
 pub async fn send_message(
     server_ip: &str,

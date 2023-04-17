@@ -68,7 +68,8 @@ async fn main() {
                                             cert.to_string(), 
                                             key.to_string(), 
                                             ca.to_string(), 
-                                            port.to_string());
+                                            port.to_string(),
+                                            tx.clone()).await;
             my_server.add_client("test".to_owned());
 
             tokio::spawn(async move {
