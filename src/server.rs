@@ -18,6 +18,7 @@ pub struct Idmsg {
 pub async fn run_server(tx: UnboundedSender<String>) {
     let warp_tx = warp::any().map(move || tx.clone());
 
+
     let route1 = warp::post()
     .and(warp::path("message"))
     .and(warp::body::json())
@@ -73,7 +74,7 @@ pub async fn send_message(
 
 
 
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Debug, Serialize)]
 pub struct Server {
     cert:   String,
     key:    String,
@@ -117,10 +118,11 @@ async fn _serve(tx: UnboundedSender<String>) {
         
 //  I DONT KNOW HOW TO SERIALIZE OR DESERIALIZE SHIT FROM HERE
 
-        if let Err(e) = warp_tx.send(msg) {
+        if let Err(e) = warp_tx.send(msg.clone()) {
             panic!("Cant relay message back to main thread!. Error: {e}");
         }
-        // warp::reply::json(&request)
+        // warp::reply::json(&msg);
+        warp::reply()
     });
     
     let route2 = warp::post()
@@ -131,7 +133,7 @@ async fn _serve(tx: UnboundedSender<String>) {
         warp::reply::json(&request)
     });
     
-    warp::serve(route1.or(route2))
+    warp::serve(keygen.or(route2))
     .tls()
     .key_path("src/server/localhost.key")
     .cert_path("src/server/localhost.bundle.crt")

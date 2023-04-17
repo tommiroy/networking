@@ -52,6 +52,13 @@ use server::{Server, run_server};
 
 use tokio::sync::mpsc::{Sender, unbounded_channel};
 
+
+// Testing only
+use serde::{Deserialize, Serialize};
+
+
+
+
 /// ###################################################################
 /// Main Function
 /// ###################################################################
@@ -70,7 +77,17 @@ async fn main() {
                 ca.to_string(), 
                 port.to_string(),
                 tx.clone()).await;
-                
+            
+            if let Ok(test_server_serialized) = serde_json::to_string(&my_server) {
+                println!("{test_server_serialized}");
+                let deserialized_server = serde_json::from_slice::<Server>(test_server_serialized.as_bytes());
+                println!("{deserialized_server:?}")
+            } else {
+                println!("Could not serialized the server");
+            }
+
+
+            
             my_server.add_client("test".to_owned());
 
             while let Some(msg) = rx.recv().await {
