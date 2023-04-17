@@ -65,16 +65,13 @@ async fn main() {
         Mode::Server (ServerOption { cert, key, ca, port}) => {
             let (tx, mut rx) = unbounded_channel::<String>();
             let mut my_server = Server::new(
-                                            cert.to_string(), 
-                                            key.to_string(), 
-                                            ca.to_string(), 
-                                            port.to_string(),
-                                            tx.clone()).await;
+                cert.to_string(), 
+                key.to_string(), 
+                ca.to_string(), 
+                port.to_string(),
+                tx.clone()).await;
+                
             my_server.add_client("test".to_owned());
-
-            tokio::spawn(async move {
-                run_server(tx).await;
-            });
 
             while let Some(msg) = rx.recv().await {
                 println!("Got a message: {msg}");

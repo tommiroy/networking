@@ -16,7 +16,6 @@ pub struct Idmsg {
 
 
 pub async fn run_server(tx: UnboundedSender<String>) {
-    // 
     let warp_tx = warp::any().map(move || tx.clone());
 
     let route1 = warp::post()
@@ -24,11 +23,15 @@ pub async fn run_server(tx: UnboundedSender<String>) {
     .and(warp::body::json())
     .and(warp_tx.clone())
     .map(|request: Idmsg, warp_tx: UnboundedSender<String>| {
-        println!(
-            "Received message from {}: {}",
-            request.identity, request.text
-        );
-        warp_tx.send(request.clone().text);
+        // println!(
+        //     "Message: Received message from {}: {}",
+        //     request.identity, request.text
+        // );
+        if let Err(e) = warp_tx.send(request.clone().text) {
+            println!("Cant send message back to main: {e:?}");
+        } else {
+            print!("Sent message back to main");
+        };
         warp::reply::json(&request)
     });
     
@@ -36,7 +39,7 @@ pub async fn run_server(tx: UnboundedSender<String>) {
     .and(warp::path("route2"))
     .and(warp::body::json())
     .map(|request: serde_json::Value| {
-        println!("Received message: {:?}", request);
+        // println!("Received message: {:?}", request);
         warp::reply::json(&request)
     });
     
@@ -82,7 +85,10 @@ pub struct Server {
 impl Server {
 
     pub async fn new(cert: String, key: String, ca: String, port: String, tx: UnboundedSender<String>) -> Server{
-        _serve(tx).await;
+        tokio::spawn(async move {
+            _serve(tx).await;
+        });
+
         Self {cert, key, ca, port, clients: Vec::<String>::new()}
     }
 
@@ -106,7 +112,9 @@ async fn _serve(tx: UnboundedSender<String>) {
             "Received message from {}: {}",
             request.identity, request.text
         );
-        warp_tx.send(request.clone().text);
+        if let Err(e) = warp_tx.send(request.clone().text) {
+            panic!("Cant relay message back to main thread!. Error: {e}");
+        }
         warp::reply::json(&request)
     });
     
@@ -114,7 +122,7 @@ async fn _serve(tx: UnboundedSender<String>) {
     .and(warp::path("route2"))
     .and(warp::body::json())
     .map(|request: serde_json::Value| {
-        println!("Received message: {:?}", request);
+        // println!("Received message: {:?}", request);
         warp::reply::json(&request)
     });
     
