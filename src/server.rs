@@ -89,7 +89,6 @@ impl Server {
         tokio::spawn(async move {
             _serve(tx).await;
         });
-
         Self {cert, key, ca, port, clients: Vec::<String>::new()}
     }
 
@@ -116,10 +115,10 @@ async fn _serve(tx: UnboundedSender<String>) {
         //     request.identity, request.text
         // );
         
-//  I DONT KNOW HOW TO SERIALIZE OR DESERIALIZE SHIT FROM HERE
-
         if let Err(e) = warp_tx.send(msg.clone()) {
             panic!("Cant relay message back to main thread!. Error: {e}");
+        } else {
+            println!("Sent a message back!");
         }
         // warp::reply::json(&msg);
         warp::reply()

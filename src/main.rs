@@ -41,7 +41,6 @@ struct ServerOption {
 }
 
 mod server;
-mod mainbak;
 mod client;
 mod helper;
 
@@ -74,24 +73,37 @@ async fn main() {
             let mut my_server = Server::new(
                 cert.to_string(), 
                 key.to_string(), 
-                ca.to_string(), 
+                ca.to_string(),
                 port.to_string(),
                 tx.clone()).await;
             
-            if let Ok(test_server_serialized) = serde_json::to_string(&my_server) {
-                println!("{test_server_serialized}");
-                let deserialized_server = serde_json::from_slice::<Server>(test_server_serialized.as_bytes());
-                println!("{deserialized_server:?}")
-            } else {
-                println!("Could not serialized the server");
-            }
+            // test for serializing and deserializing objects. 
+            // if let Ok(test_server_serialized) = serde_json::to_string(&my_server) {
+            //     println!("{test_server_serialized}");
+            //     let deserialized_server = serde_json::from_slice::<Server>(test_server_serialized.as_bytes());
+            //     println!("{deserialized_server:?}")
+            // } else {
+            //     println!("Could not serialized the server");
+            // }
 
 
             
-            my_server.add_client("test".to_owned());
+            // my_server.add_client("test".to_owned());
 
-            while let Some(msg) = rx.recv().await {
-                println!("Got a message: {msg}");
+            // while let Some(msg) = rx.recv().await {
+            //     println!("Got a message: {msg}");
+
+            // }
+
+            while let msg = rx.recv().await {
+                match msg.clone() {
+                    Some(str) => {
+                        println!("Got a message: {}", str);
+                    }
+                    _ => {
+                        println!("Wrong format!")
+                    }
+                }
 
             }
         }

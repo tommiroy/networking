@@ -66,12 +66,12 @@ pub async fn run_client(ip: String) -> Result<(), reqwest::Error> {
 
     let server_ip = "https://".to_owned() + &ip + "/";
 
-    let ras = send_message(&server_ip, &client, "route2", request2.clone()).await;
-    let res = send_message(&server_ip, &client, "keygen", request).await;
+    // let ras = send_message(&server_ip, &client, "route2", request2.clone()).await;
+    let res = send_message(&server_ip, &client, "keygen", "request".to_string()).await;
     println!("Received:");
     println!("Server responded with message: {:?}", res);
-    println!("Received:");
-    println!("Server responded with message: {:?}", ras);
+    // println!("Received:");
+    // println!("Server responded with message: {:?}", ras);
     Ok(())
 }
 
@@ -79,7 +79,7 @@ pub async fn send_message(
     server_ip: &str,
     client: &reqwest::Client,
     channel: &str,
-    msg: Idmsg,
+    msg: String,
 ) -> reqwest::Response {
     client
         .post(server_ip.to_owned() + channel)
