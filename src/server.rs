@@ -130,9 +130,9 @@ async fn _serve(port: u16, tx: UnboundedSender<String>) {
     // Will run in forever loop. There is a way to gracefully shutdown this. But nah for now.
     warp::serve(warp_routes)
         .tls()
-        .key_path("local_x509/server/server.pem")
-        .cert_path("local_x509/server/server.pem")
-        .client_auth_required_path("local_x509/ca/ca.crt")
+        .key_path("docker_x509/central/central.pem")
+        .cert_path("docker_x509/central/central.pem")
+        .client_auth_required_path("docker_x509/ca/ca.crt")
         .run(([172, 18, 0, 2], port))
         .await;
 }
