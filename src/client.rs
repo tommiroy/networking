@@ -18,7 +18,7 @@ pub struct Idmsg {
     text: String,
 }
 
-pub async fn run_client(identity: String, ca: String, ip: String) -> Result<(), reqwest::Error> {
+pub async fn run_client(identity: String, ca: String, addr:String ,port: String) -> Result<(), reqwest::Error> {
     let _cert = reqwest_read_cert(ca.to_owned()).await;
     // let mut buf = Vec::new();
     // File::open(server_ca_file_loc)
@@ -52,10 +52,11 @@ pub async fn run_client(identity: String, ca: String, ip: String) -> Result<(), 
         .https_only(true)
         .build()?;
 
-    let server_ip = "https://".to_owned() + &ip + "/";
+    let server_ip = "https://".to_owned() + &addr + ":" + &port + "/";
+    // println!("{server_ip}");
 
     // let ras = send_message(&server_ip, &client, "route2", request2.clone()).await;
-    let res = send_message(&server_ip, &client, "nonce", "keygen process".to_string()).await;
+    let res = send_message(&server_ip, &client, "keygen", "keygen process".to_string()).await;
     println!("Received:");
     println!("Server responded with message: {:?}", res);
     // println!("Received:");

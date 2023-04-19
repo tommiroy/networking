@@ -21,51 +21,40 @@ enum Mode {
 
 #[derive(Args, Debug)]
 struct ServerOption {
-    // /// Certificates path
-    // #[arg(long)]
-    // cert: String,
 
-    // /// Private key path
-    // #[arg(long)]
-    // key:String,
     /// Identity of the server: cert + key
-
-    #[arg(short, long, default_value = "docker_x509/central/central.pem")]
+    #[arg(short('i'), long, default_value = "docker_x509/central/central.pem")]
     identity: String,
 
     /// Certificate Authority path
-    #[arg(short, long, default_value = "docker_x509/ca/ca.crt")]
+    #[arg(short('c'), long, default_value = "docker_x509/ca/ca.crt")]
     ca: String,
 
+    /// server address
+    #[arg(short, long, default_value = "central")]
+    addr: String,
+
     /// Server port
-    #[arg(short, long, default_value = "3030")]
+    #[arg(short('p'), long, default_value = "3030")]
     port: String,
 }
 
 #[derive(Args, Debug)]
 struct ClientOption {
-    // /// Certificates path
-    // #[arg(long)]
-    // cert: String,
 
-    // /// Private key path
-    // #[arg(long)]
-    // key:String,
-    /// Identity of the server: cert + key
-
-    #[arg(short, long, default_value = "docker_x509/ecu1/ecu1.pem")]
+    #[arg(short('i'), long, default_value = "docker_x509/ecu1/ecu1.pem")]
     identity: String,
 
     /// Certificate Authority path
-    #[arg(short, long, default_value = "docker_x509/ca/ca.crt")]
+    #[arg(short('c'), long, default_value = "docker_x509/ca/ca.crt")]
     ca: String,
 
-    // server address
-    #[arg(long, default_value = "central")]
+    /// server address
+    #[arg(short('a'), long("addr"), default_value = "central")]
     central_addr: String,
 
     /// Server port
-    #[arg(short, long, default_value = "3030")]
+    #[arg(short('p'), long, default_value = "3030")]
     port: String,
 }
 
@@ -92,11 +81,12 @@ async fn main() {
 
     match &args.mode {
         // Start as a server
-        Mode::Server(ServerOption { identity, ca, port }) => {
+        Mode::Server(ServerOption { identity, ca, addr, port }) => {
             let (tx, mut rx) = unbounded_channel::<String>();
             let mut my_server = Server::new(
                 identity.to_string(),
                 ca.to_string(),
+                addr.to_string(),
                 port.to_string(),
                 tx.clone(),
             )
@@ -154,11 +144,10 @@ async fn main() {
             let _ = run_client(
                 identity.to_string(),
                 ca.to_string(),
-                central_addr.to_owned() + ":" + port,
+                central_addr.to_string(),
+                port.to_string(),
             )
             .await;
-            // let _ = run_client("server:3030".to_string()).await;
-            // println!("Arguments for Client: {option:?}");
         }
     }
 }
