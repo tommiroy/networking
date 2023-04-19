@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use tokio::sync::mpsc::UnboundedSender;
 use warp::*;
 use std::net::SocketAddr;
@@ -62,7 +63,7 @@ impl Server {
         }
     }
     // Have not tested
-    pub fn add_client(&mut self, name: String, addr: String) {
+    pub fn add_client(&mut self, addr: String) {
         self.clients.push(addr);
     }
     // Have not tested
@@ -71,7 +72,7 @@ impl Server {
         let msg = serde_json::to_string(&msg).expect("Cant serialize this message");
         // Send it!
         self._client
-            .post(receiver.to_owned() + &channel)
+            .post("https://".to_owned() + &receiver + "/"+ &channel)
             .body(msg)
             .send()
             .await
@@ -131,7 +132,6 @@ async fn _serve(identity: String, ca: String, addr:String, port: String, tx: Unb
             .cert_path(identity.clone())
             .client_auth_required_path(ca.clone())
             .run(socket)
-            // .run(([127, 0, 0, 1], 3030))
             .await;
     } else {
         panic!("Invalid server address or port")
