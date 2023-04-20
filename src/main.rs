@@ -50,11 +50,11 @@ struct ClientOption {
     ca: String,
 
     /// server address
-    #[arg(long, default_value = "server")]
+    #[arg(long("caddr"), default_value = "server")]
     central_addr: String,
 
     /// Central server port
-    #[arg(long, default_value = "3030")]
+    #[arg(long("cport"), default_value = "3030")]
     central_port: String,
 
     
@@ -94,7 +94,7 @@ async fn main() {
         // Start as a server
         Mode::Server(ServerOption { identity, ca, addr, port }) => {
             let mut my_server = Server::new(identity, ca, addr, port, tx).await;
-
+            my_server.add_client("127.0.0.1:3031".to_string());
             // test for serializing and deserializing objects.
             // if let Ok(test_server_serialized) = serde_json::to_string(&my_server) {
             //     println!("{test_server_serialized}");
@@ -115,6 +115,7 @@ async fn main() {
                     match msg.msg_type {
                         MsgType::Keygen => {
                             println!("KeyGen type: {}", msg.msg);
+                            my_server.send("client:3031".to_owned(), "keygen".to_owned(), msg).await;
                             todo!("Add handler for keygen");
                         }
                         MsgType::Nonce => {

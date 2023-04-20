@@ -71,6 +71,7 @@ impl Server {
         // Serialize the message
         let msg = serde_json::to_string(&msg).expect("Cant serialize this message");
         // Send it!
+        println!("https://{}/{}", receiver.clone(), channel.clone());
         self._client
             .post("https://".to_owned() + &receiver + "/"+ &channel)
             .body(msg)
